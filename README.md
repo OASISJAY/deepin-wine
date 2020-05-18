@@ -1,16 +1,27 @@
 # deepin-wine
 
-> deepin-wine环境与应用在Mint/Ubuntu/Debian上的移植仓库
+> deepin-wine环境与应用在Debian/Ubuntu上的移植仓库
 >
 > 使用deepin官方原版软件包
 >
-> 安装QQ只需要`apt-get install`这么简单
+> 安装QQ/微信只需要两条命令
 
-## 快速开始
+## 关于V2（老用户看这里）
+
+**deepin-wine**移植仓库现（2010/05/03）已升级为**V2**版本，兼容更多发行版。
+
+旧版现在依然可以使用，但将来会择期关闭，运行如下命令可以从**V1**升级到**V2**。
+
+```sh
+sudo rm /etc/apt/trusted.gpg.d/i-m.dev.gpg
+wget -O- https://deepin-wine.i-m.dev/setup.sh | sh
+```
+
+## 快速开始（新用户看这里）
 
 1. 添加仓库
 
-   运行如下一行命令即可
+   首次使用时，你需要运行如下一条命令将移植仓库添加到系统中。
 
    ```sh
    wget -O- https://deepin-wine.i-m.dev/setup.sh | sh
@@ -18,15 +29,15 @@
 
 2. 应用安装
 
-   现在，你可以像对待普通的软件包一样，使用`apt-get`系列命令进行各个deepin-wine应用安装、更新、卸载和依赖清理了。
+   自此以后，你可以像对待普通的软件包一样，使用`apt-get`系列命令进行各种应用安装、更新和卸载清理了。
 
-   比如安装TIM只需要运行下面的命令，
+   比如安装微信只需要运行下面的命令，
 
    ```sh
-   sudo apt-get install deepin.com.qq.office
+   sudo apt-get install deepin.com.wechat
    ```
 
-   常用应用的软件包名如下：
+   将`deepin.com.wechat`替换为下列包名，可以继续安装其他应用：
 
    |    应用    |          包名           |
    | :--------: | :---------------------: |
@@ -38,17 +49,13 @@
    | 迅雷极速版 | deepin.com.thunderspeed |
    |   WinRAR   |  deepin.cn.com.winrar   |
 
-   当然还有一些其他的应用，不全部列出。
-
-   除了QQ、TIM、微信和百度云这些个常用的，其余应用兼容性未实际测试，如果发现了问题还请在issues中提出。
-
-3. 在页面右上角点个star滋瓷一下（逃）
+   当然还有一些其他的应用，不逐一列出。
 
 ## 添加仓库过程详解
 
 **不关心细节的同学不必了解这部分，完全不影响使用**
 
-环境配置其实就是添加我自行构建的软件仓库为源，具体包括以下三步。
+环境配置其实就是添加我自行构建的软件仓库为源，具体包括以下几步。
 
 1. 添加i386架构
 
@@ -60,33 +67,23 @@
    sudo dpkg --add-architecture i386
    ```
 
-2. 添加GPG公钥
-
-   使用第三方软件仓库需要添加其公钥。
-
-   下载[i-m.dev.gpg](https://deepin-wine.i-m.dev/i-m.dev.gpg)复制到`/etc/apt/trusted.gpg.d/`目录即可，或者直接运行
-
-   ```sh
-   sudo wget -O /etc/apt/trusted.gpg.d/i-m.dev.gpg "https://deepin-wine.i-m.dev/i-m.dev.gpg"
-   ```
-
 3. 添加软件源
 
-   创建`/etc/apt/sources.list.d/deepin-wine.i-m.dev.list`文件，并先添加如下内容，
+   创建`/etc/apt/sources.list.d/deepin-wine.i-m.dev.list`文件，编辑其内容如下，
 
    ```
-   deb https://deepin-wine.i-m.dev/deepin/ ./
+   deb [trusted=yes] https://deepin-wine.i-m.dev /
    ```
 
-   （Debian跳过此条，）如果是Ubuntu/Mint等，还需要继续添加如下内容，
+3. 设置源优先级
+
+   创建`/etc/apt/preferences.d/deepin-wine.i-m.dev.pref`文件，编辑其内容如下，
 
    ```
-   deb https://deepin-wine.i-m.dev/ubuntu-fix/ ./
+   Package: *
+   Pin: release l=deepin-wine
+   Pin-Priority: 200
    ```
-
-   第一条源的仓库中提供了deepin-wine环境与应用相关的软件包。
-
-   第二条源是一个针对Ubuntu等系统的修复，因为这些系统上的`libjpeg62-turbo`已经被`libjpeg-turbo8`取代了，这一行对应的软件仓库中提供了一个虚拟`libjpeg62-turbo`包修复解决了这个问题。所以实际上，要不要添加第二行，可以观察`apt-cache policy libjpeg62-turbo:i386`命令的输出，看看原生的软件仓库中是否提供了`libjpeg62-turbo`包再行决定。
 
 4. 刷新软件源
 
@@ -113,18 +110,20 @@
 4. 移除软件仓库
 
    ```sh
-   sudo rm /etc/apt/trusted.gpg.d/i-m.dev.gpg /etc/apt/sources.list.d/deepin-wine.i-m.dev.list
+   sudo rm /etc/apt/preferences.d/deepin-wine.i-m.dev.pref /etc/apt/sources.list.d/deepin-wine.i-m.dev.list
    sudo apt-get update
    ```
    
-   这会把一切恢复到最初初始的状态。
+   这会把一切恢复到最初始的状态。
+
+## 移植原理
+
+deepin把QQ/微信之类的deepin wine应用打包放在了deepin仓库中，因此先提取出这些应用及依赖的软件包，再减去Debian/Ubuntu等发行版官方仓库中固有的软件包，就可以打包成一个移植于对应发行版的“差量仓库”。
 
 ## 版权相关
 
-这个git仓库中的代码只包括了移植版软件仓库的构建工具，最后仓库中软件包的下载地址会被301重定向到deepin的官方仓库（及镜像）中去，其版权由[deepin](https://www.deepin.com/)所有。
-
-我只是个搬运工。
+这个git仓库中的代码只包括了移植版软件仓库的构建工具，最后仓库中软件包的下载地址会被301重定向到deepin的官方仓库（或者镜像）中去，其版权由 [deepin](https://www.deepin.com/) 所有。
 
 ## 感谢
 
-本工作是参考了**wszqkzqk**的[deepin-wine-ubuntu](https://github.com/wszqkzqk/deepin-wine-ubuntu)工作，在此基础上进行了高更一层的包装，让使用变得方便一点。同时，此项目的兼容wszqkzqk的项目，已经按照wszqkzqk项目安装好后，依然可以再按此项目进行配置，可以更方便地进行后续管理。
+本项目受 [wszqkzqk/deepin-wine-ubuntu](https://github.com/wszqkzqk/deepin-wine-ubuntu) 项目启发，改进了一下安装方式，因此兼容原项目，已经按照deepin-wine-ubuntu项目安装好后，依然可以再按此项目进行配置，可以更方便地进行后续更新。
